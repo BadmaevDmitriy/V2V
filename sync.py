@@ -1,5 +1,6 @@
 import matplotlib.pyplot as plt
 from math import *
+from decimal import Decimal
 import random as rnd
 import numpy as np
 
@@ -9,15 +10,9 @@ def poisson(lambd, frames):
     for i in range(len(lambd)):
         messages.append(i)
         messages[i] = np.random.poisson(lambd[i], frames)
-    # lout = []
-    # for i in range(len(lambd)):
-    #     msg = 0
-    #     for j in range(frames):
-    #         msg += messages[i][j]
-    #     msg /= frames
-    #     lout.append(msg)
-    # for i in range(len(lambd)):
-    #     print(lout[i])
+    for i in range(len(lambd)):
+        for j in range(len(messages[i])):
+            messages[i][j] = floor(lambd[i])
     return messages
 
 
@@ -73,7 +68,7 @@ def proc_conflict(mas, i):
     return out_msg
 
 
-def processing(subscribers, slots, polynomial):
+def processing2(subscribers, slots, polynomial):
     queue = [[] for i in range(slots)]
     msg_left = subscribers
     copy = 2
@@ -82,17 +77,14 @@ def processing(subscribers, slots, polynomial):
     for k in range(subscribers):
         rand_num = rnd.random()
         if polynomial == 1:
-            if rand_num <= 0.5:
-                copy = 2
-            elif 0.5 < rand_num <= 0.78:
+            if rand_num <= 0.86:
                 copy = 3
             else:
                 copy = 8
         j = 0
         while j < copy:
             rand = rnd.randint(0, slots - 1)
-            if not(contains(queue[rand], k)):
-                if not(queue[rand])
+            if not(contains(queue[rand], k)) and not(contains(queue[rand], 1)):
                 queue[rand].append(k)
                 j += 1
 
@@ -109,7 +101,7 @@ def processing(subscribers, slots, polynomial):
     return msg_left
 
 
-def slotted_aloha(mas_msg, num_of_frames, num_of_slots, polynomial):
+def slotted_aloha2(mas_msg, num_of_frames, num_of_slots, polynomial):
     lambd_out = []
     packet_loss = []
     total_msg = []
@@ -121,18 +113,18 @@ def slotted_aloha(mas_msg, num_of_frames, num_of_slots, polynomial):
         for j in range(num_of_frames):
             total_msg[i] += mas_msg[i][j]
             if queue > 0:
-                packet_loss[i] += processing(queue, num_of_slots, polynomial)
+                packet_loss[i] += processing2(queue, num_of_slots, polynomial)
             if mas_msg[i][j] > 0:
                 queue = mas_msg[i][j]
         lambd_out[i] = (total_msg[i] - packet_loss[i]) / frames
         packet_loss[i] /= total_msg[i]
-        packet_loss[i] *= 100
+        # packet_loss[i] *= 100
     return lambd_out, packet_loss
 
 
 if __name__ == "__main__":
-    simulation_time = 100000
-    slots = 100
+    simulation_time = 172
+    slots = 172
     frames = simulation_time // slots
     nfig = 1
     lambd = []
@@ -140,37 +132,14 @@ if __name__ == "__main__":
         lambd.append(i * slots / 10)
 
     messages = poisson(lambd, frames)
-
-    res = slotted_aloha(messages, frames, slots, 0)
-    res2 = slotted_aloha(messages, frames, slots, 1)
-    res3 = slotted_aloha(messages, frames, slots, 2)
+    res = slotted_aloha2(messages, frames, slots, 1)
 
     for i in range(len(lambd)):
         lambd[i] /= slots
-        res[0][i] /= slots
-        res2[0][i] /= slots
-        res3[0][i] /= slots
-
-    # info1 = "CRDSA. Frames = " + str(frames) + ", Size of frame = " + str(slots)
-    # info2 = "IRSA. Frames = " + str(frames) + ", Size of frame = " + str(slots)
-    # info3 = "SA. Frames = " + str(frames) + ", Size of frame = " + str(slots)
-    info1 = "CRDSA"
-    info2 = "IRSA"
-    info3 = "SA"
-    info4 = str(slots) + " slots"
 
     nfig += 1
     plt.figure(nfig)
-    plt.plot(lambd, res[0], "-r", label=info1)
-    plt.plot(lambd, res2[0], "-y", label=info2)
-    plt.plot(lambd, res3[0], "-b", label=info3)
-    plt.xlabel("$\lambda$\n" + str(slots) + " slots")
-    plt.ylabel("$\lambda$out")
-    plt.xlim([0, 1])
-    plt.ylim([0, 0.7])
-    plt.grid()
-    plt.legend()
+    plt.plot(lambd, res[1])
+    plt.yscale('log')
+    plt.grid(True)
     plt.show()
-
-    for i in range(len(lambd)):
-        print("Packet loss for lambd = " + str(lambd[i]) + " : CRDSA " + "%.2f" % res[1][i] + " %  IRSA " + "%.2f" % res2[1][i] + " %  SA " + "%.2f" % res3[1][i] + " %")
