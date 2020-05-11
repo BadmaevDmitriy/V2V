@@ -84,7 +84,10 @@ def processing2(subscribers, slots, polynomial):
         j = 0
         while j < copy:
             rand = rnd.randint(0, slots - 1)
-            if not(contains(queue[rand], k)) and not(contains(queue[rand], 1)):
+            if contains(queue[rand], 0) and k != 0:
+                j += 1
+                continue
+            if not(contains(queue[rand], k)):
                 queue[rand].append(k)
                 j += 1
 
@@ -123,7 +126,7 @@ def slotted_aloha2(mas_msg, num_of_frames, num_of_slots, polynomial):
 
 
 if __name__ == "__main__":
-    simulation_time = 172
+    simulation_time = 1720000
     slots = 172
     frames = simulation_time // slots
     nfig = 1
